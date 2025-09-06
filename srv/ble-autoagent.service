@@ -1,0 +1,14 @@
+[Unit]
+Description=BlueZ Auto-Pairing Agent (Just Works)
+After=bluetooth.service
+Requires=bluetooth.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env /usr/local/bin/ble-autoagent.py
+Restart=on-failure
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
