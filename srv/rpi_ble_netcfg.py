@@ -6,6 +6,7 @@ import json
 import subprocess
 import time
 from typing import Any, Dict, Optional, List
+import urllib.request
 
 from gi.repository import GLib
 from bluezero import adapter, peripheral
@@ -215,6 +216,21 @@ def _http_204(url: str = "https://connectivitycheck.gstatic.com/generate_204", t
         return False, None, None
 
 
+def get_public_ip(timeout: float = 3.0) -> Optional[str]:
+    urls = ["https://ifconfig.me/ip", "https://api.ipify.org", "https://checkip.amazonaws.com", "https://icanhazip.com",]
+    for url in urls:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "curl/8.6.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                ip = resp.read().decode().strip()
+                if ip:
+                    return ip
+        except Exception:
+            continue
+
+    return None
+
+
 def check_internet(force: bool = False) -> Dict[str, Any]:
     """Комплексная проверка выхода в интернет с кэшем."""
     now = time.time()
@@ -233,8 +249,10 @@ def check_internet(force: bool = False) -> Dict[str, Any]:
     if not ip_ok:
         ip_ok, ip_ms = _ping("8.8.8.8", timeout=1.0)
 
-    dns_ok = _dns_resolve("example.com", timeout=2.0)
+    dns_ok = _dns_resolve("ya.ru", timeout=2.0)
     http_ok, http_s, http_code = _http_204(timeout=3.0)
+    
+    public_ip = get_public_ip(timeout=3.0)
 
     status = {
         "iface": iface,
@@ -247,6 +265,7 @@ def check_internet(force: bool = False) -> Dict[str, Any]:
         "http_ok": http_ok,
         "http_code": http_code,
         "http_time_s": http_s,
+        "public_ip": public_ip,
         "online": (ip_ok and http_ok),
     }
 
@@ -284,7 +303,8 @@ def read_device_info() -> Dict[str, Any]:
         "os": f"{os_name} {arch}",
         "host": host_model,
         "kernel": kernel,
-        "net": net_status,
+        "online": net_status.get("online", False),
+        "public_ip": net_status.get("public_ip", None),
     }
 
 
