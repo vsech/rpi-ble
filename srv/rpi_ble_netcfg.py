@@ -25,8 +25,10 @@ _state: Dict[str, Any] = {
     "lan": {},
     "status": {"op": None, "stage": None, "ok": True, "err": None},
     "last_scan": {"ts": 0, "aps": []},
+    "net": {"ts": 0, "status": {}},
 }
 WIFI_SCAN_STALE_SECS = 10
+NET_CHECK_STALE_SECS = 15
 WIFI_NOTIFY_CHUNK = 360
 # Handles to characteristic objects for sending notifications when enabled
 _status_chr_obj = None  # type: Optional[peripheral.Characteristic]
@@ -164,6 +166,94 @@ def _read_pretty_name() -> str:
     return out or "Linux"
 
 # ==============================
+# Network operations (helpers)
+# ==============================
+
+
+def _get_default_gw() -> Optional[str]:
+    out = run("ip route | awk '/^default/{print $3; exit}'").stdout.strip()
+    return out or None
+
+
+def _active_iface_for(dest: str = "1.1.1.1") -> Optional[str]:
+    out = run(
+        f"ip route get {dest} 2>/dev/null | awk '{{for(i=1;i<=NF;i++) if($i==\"dev\"){{print $(i+1); exit}}}}'").stdout.strip()
+    return out or None
+
+
+def _ping(host: str, timeout: float = 1.0) -> tuple[bool, Optional[float]]:
+    r = run(f"ping -c1 -W {int(timeout)} {host}")
+    ok = (r.returncode == 0)
+    ms = None
+    if ok:
+        for line in r.stdout.splitlines():
+            if "time=" in line:
+                try:
+                    ms = float(line.split("time=", 1)[1].split()[0])
+                except Exception:
+                    ms = None
+                break
+    return ok, ms
+
+
+def _dns_resolve(host: str = "example.com", timeout: float = 2.0) -> bool:
+    r = run(f"timeout {timeout:.0f}s getent hosts {host}")
+    return r.returncode == 0 and bool(r.stdout.strip())
+
+
+def _http_204(url: str = "https://connectivitycheck.gstatic.com/generate_204", timeout: float = 3.0) -> tuple[bool, Optional[float], Optional[int]]:
+    r = run(
+        f"curl -I -m {int(timeout)} -s -o /dev/null -w '%{{http_code}} %{{time_total}}' {url}")
+    if r.returncode != 0:
+        return False, None, None
+    try:
+        code_s, t_s = (r.stdout.strip().split() + ["", ""])[:2]
+        code = int(code_s)
+        t = float(t_s)
+        return (code == 204 or code == 200), t, code
+    except Exception:
+        return False, None, None
+
+
+def check_internet(force: bool = False) -> Dict[str, Any]:
+    """Комплексная проверка выхода в интернет с кэшем."""
+    now = time.time()
+    last = _state.get("net") or {"ts": 0, "status": {}}
+    if not force and (now - float(last.get("ts", 0))) < NET_CHECK_STALE_SECS:
+        return last["status"]
+
+    gw = _get_default_gw()
+    iface = _active_iface_for("1.1.1.1") or _active_iface_for(
+        "8.8.8.8") or _active_iface_for()
+    gw_ok, gw_ms = (False, None)
+    if gw:
+        gw_ok, gw_ms = _ping(gw, timeout=1.0)
+
+    ip_ok, ip_ms = _ping("1.1.1.1", timeout=1.0)
+    if not ip_ok:
+        ip_ok, ip_ms = _ping("8.8.8.8", timeout=1.0)
+
+    dns_ok = _dns_resolve("example.com", timeout=2.0)
+    http_ok, http_s, http_code = _http_204(timeout=3.0)
+
+    status = {
+        "iface": iface,
+        "gw": gw,
+        "gw_ping_ok": gw_ok,
+        "gw_ping_ms": gw_ms,
+        "ip_ping_ok": ip_ok,
+        "ip_ping_ms": ip_ms,
+        "dns_ok": dns_ok,
+        "http_ok": http_ok,
+        "http_code": http_code,
+        "http_time_s": http_s,
+        "online": (ip_ok and http_ok),
+    }
+
+    _state["net"] = {"ts": now, "status": status}
+    return status
+
+# ==============================
 # Network operations
 # ==============================
 
@@ -181,6 +271,8 @@ def read_device_info() -> Dict[str, Any]:
     kernel = _read_kernel()
     host_model = _read_rpi_model() or "Unknown"
 
+    net_status = check_internet(force=False)
+
     return {
         "hostname": hostname,
         "cpu_load": round(cpu_load, 2),
@@ -192,6 +284,7 @@ def read_device_info() -> Dict[str, Any]:
         "os": f"{os_name} {arch}",
         "host": host_model,
         "kernel": kernel,
+        "net": net_status,
     }
 
 

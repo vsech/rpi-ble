@@ -88,6 +88,7 @@ async def cmd_devinfo(address: Optional[str], name: Optional[str]) -> None:
     client = await connect(address, name)
     try:
         raw = await client.read_gatt_char(CHR_DEVINFO)
+        print(f"Device Info: {raw}")
         print(json.dumps(pj(raw), ensure_ascii=False, indent=2))
     finally:
         await client.disconnect()
@@ -159,7 +160,8 @@ async def cmd_scan(address: Optional[str], name: Optional[str], wait: float) -> 
                     print(json.dumps(json.loads(raw.decode("utf-8")),
                           ensure_ascii=False, indent=2))
                 except Exception:
-                    print("Не успели получить полный JSON ни через notify, ни через read.")
+                    print(
+                        "Не успели получить полный JSON ни через notify, ни через read.")
     finally:
         try:
             await client.stop_notify(CHR_SCAN_RESULT)
