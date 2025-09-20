@@ -42,7 +42,7 @@ async def find_device(name_hint: str = "rpi-netcfg", timeout: float = 6.0):
         if (d.name or "").strip().lower() == name_hint_l:
             return d
 
-    # если не нашли по имени — пробуем по сервису, если реклама содержит uuids
+    # если не нашли по имени — пробуем по сервису, если содержит uuids
     for d in devices:
         uuids = set()
         m = getattr(d, "metadata", None)
@@ -69,7 +69,7 @@ async def connect(address: Optional[str], name: Optional[str] = None):
 
     if not dev:
         raise RuntimeError(
-            "BLE устройство не найдено. Включите Raspberry Pi рекламу и Bluetooth на ПК.")
+            "BLE устройство не найдено. Включите Raspberry Pi и Bluetooth на ПК.")
 
     client = BleakClient(dev)
     await client.connect()
@@ -159,7 +159,6 @@ async def cmd_scan(address: Optional[str], name: Optional[str], wait: float) -> 
                     print(json.dumps(json.loads(raw.decode("utf-8")),
                           ensure_ascii=False, indent=2))
                 except Exception:
-                    print(f'{len(raw)} {raw=} ')
                     print("Не успели получить полный JSON ни через notify, ни через read.")
     finally:
         try:

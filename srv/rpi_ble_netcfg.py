@@ -35,6 +35,8 @@ _wifi_scan_chr_obj = None  # type: Optional[peripheral.Characteristic]
 # ==============================
 # Helpers
 # ==============================
+
+
 def _notify_json_chunks(characteristic, obj: Any) -> None:
     """Отправить JSON чанками через notify, чтобы не упереться в MTU."""
     payload = json_bytes(obj)
@@ -44,12 +46,14 @@ def _notify_json_chunks(characteristic, obj: Any) -> None:
         while GLib.events_pending():
             GLib.main_context_default().iteration(False)
 
+
 def _push_wifi_scan_result(data: Dict[str, Any]) -> None:
     """Всегда обновляем кэш. Если есть подписчики — пушим чанками."""
     global _wifi_scan_chr_obj
     _state["last_scan"] = data
     if _wifi_scan_chr_obj is not None:
         _notify_json_chunks(_wifi_scan_chr_obj, data)
+
 
 def run(cmd: str) -> subprocess.CompletedProcess:
     cmd = f'sudo {cmd}'
@@ -327,7 +331,7 @@ def scan_wifi() -> Dict[str, Any]:
             "sign": sig,
             "secu": security or "?"
         })
-    data = {"ts": time.time(), "aps": aps[:5]}
+    data = {"ts": time.time(), "aps": aps}
     _state["last_scan"] = data
     return data
 
@@ -345,7 +349,7 @@ def apply_wifi(cfg: Dict[str, Any]) -> tuple[bool, Optional[str]]:
 
 
 def apply_lan(cfg: Dict[str, Any]) -> tuple[bool, Optional[str]]:
-    dev = get_primary_eth_iface()
+    dev = cfg.get('device') or get_primary_eth_iface()
     con = get_connection_name(dev) if dev else None
     if not con:
         # fall back to a common default name
@@ -400,7 +404,10 @@ def main() -> None:
         raise RuntimeError('No Bluetooth adapter found')
     adapter_address = adapters[0].address
 
-    app = peripheral.Peripheral(adapter_address, local_name='rpi-netcfg')
+    hostname = run("hostname -s").stdout.strip()
+
+    app = peripheral.Peripheral(
+        adapter_address, local_name=f'rpi-netcfg-{hostname}')
 
     # Create one service
     app.add_service(srv_id=1, uuid=SVC_UUID, primary=True)
@@ -424,6 +431,7 @@ def main() -> None:
         if cmd == 'start':
             _set_status('wifi_scan', 'start', True, None)
             data = scan_wifi()
+
             def _do_push():
                 _push_wifi_scan_result(data)
                 _set_status('wifi_scan', 'done', True, None)
