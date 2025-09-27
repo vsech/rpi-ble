@@ -46,8 +46,9 @@ def _notify_json_chunks(characteristic, obj: Any) -> None:
     for i in range(0, len(payload), WIFI_NOTIFY_CHUNK):
         chunk = payload[i:i+WIFI_NOTIFY_CHUNK]
         characteristic.set_value(to_le_list(chunk))
-        while GLib.events_pending():
-            GLib.main_context_default().iteration(False)
+        context = GLib.main_context_default()
+        while context and context.pending():
+            context.iteration(False)
 
 
 def _push_wifi_scan_result(data: Dict[str, Any]) -> None:
@@ -498,12 +499,6 @@ def _set_status(op: str, stage: str, ok: bool = True, err: Optional[str] = None)
     # Update value for reads
     if _status_chr_obj is not None:
         _status_chr_obj.set_value(to_le_list(json_bytes(_state["status"])))
-
-
-def _push_wifi_scan_result(data: Dict[str, Any]) -> None:
-    global _wifi_scan_chr_obj
-    if _wifi_scan_chr_obj is not None:
-        _wifi_scan_chr_obj.set_value(to_le_list(json_bytes(data)))
 
 # ==============================
 # GATT setup with bluezero 0.9 API
