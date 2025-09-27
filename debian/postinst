@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl daemon-reload || true
+            systemctl enable --now rpi-ble-netcfg.service || true
+            systemctl enable --now ble-autoagent.service || true
+        fi
+        ;;
+    upgrade|abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    *)
+        echo "postinst called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

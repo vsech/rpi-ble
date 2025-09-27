@@ -1,0 +1,2 @@
+srv/rpi_ble/systemd/rpi-ble-netcfg.service usr/lib/systemd/system/
+srv/rpi_ble/systemd/ble-autoagent.service usr/lib/systemd/system/

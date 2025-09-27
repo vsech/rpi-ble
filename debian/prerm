@@ -1,0 +1,28 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove)
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl stop rpi-ble-netcfg.service || true
+            systemctl stop ble-autoagent.service || true
+            systemctl disable rpi-ble-netcfg.service || true
+            systemctl disable ble-autoagent.service || true
+            systemctl daemon-reload || true
+        fi
+        ;;
+    upgrade|deconfigure)
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl stop rpi-ble-netcfg.service || true
+            systemctl stop ble-autoagent.service || true
+        fi
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    *)
+        echo "prerm called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

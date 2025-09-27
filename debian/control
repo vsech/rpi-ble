@@ -1,0 +1,15 @@
+Source: rpi-ble
+Section: utils
+Priority: optional
+Maintainer: Vsevolod Chechun <vsevche@gmail.com>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all, python3-setuptools
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/vsech/rpi-ble
+
+Package: rpi-ble
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3-dbus, python3-gi, network-manager, bluez
+Description: Raspberry Pi BLE server for network configuration
+ This package installs BLE services that expose device and network
+ configuration for Raspberry Pi, including helper systemd units.
