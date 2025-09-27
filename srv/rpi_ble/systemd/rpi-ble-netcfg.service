@@ -1,0 +1,14 @@
+[Unit]
+Description=Raspberry Pi BLE network config GATT server
+After=bluetooth.service network.target
+Requires=bluetooth.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env rpi-ble-netcfg
+Restart=on-failure
+User=root
+Group=bluetooth
+
+[Install]
+WantedBy=multi-user.target

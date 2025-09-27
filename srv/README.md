@@ -19,5 +19,15 @@ Often needs bluetoothd with --experimental for GATT server:
 
   `sudo systemctl daemon-reload && sudo systemctl restart bluetooth`
 
-Run:
-  `python3 rpi_ble_netcfg.py`
+Install from the repository root:
+  `pip install .`
+
+Run the GATT server:
+  `rpi-ble-netcfg`
+
+Run the pairing helper agent (optional):
+  `rpi-ble-autoagent`
+
+Sample systemd units ship with the package. Resolve their paths via `importlib.resources`:
+  - BLE server: `importlib.resources.files("rpi_ble") / "systemd/rpi-ble-netcfg.service"`
+  - Auto agent: `importlib.resources.files("rpi_ble") / "systemd/ble-autoagent.service"`
