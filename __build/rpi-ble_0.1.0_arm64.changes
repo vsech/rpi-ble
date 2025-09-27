@@ -1,0 +1,30 @@
+Format: 1.8
+Date: Sat, 27 Sep 2025 17:19:23 +0500
+Source: rpi-ble
+Binary: rpi-ble
+Architecture: source all
+Version: 0.1.0
+Distribution: unstable
+Urgency: medium
+Maintainer: Vsevolod Chechun <vsevche@gmail.com>
+Description:
+ rpi-ble    - Raspberry Pi BLE server for network configuration
+Changes:
+ rpi-ble (0.1.0) unstable; urgency=medium
+ .
+   * Initial release.
+Checksums-Sha1:
+ 03a6e203117dfe43cb73502e03c45951b7b5a9ba 601 rpi-ble_0.1.0.dsc
+ 4e793b2348692e25712c7c38ae75d97f4029d590 22596 rpi-ble_0.1.0.tar.xz
+ 94fdb96709572733878abd387a2dfaf85c656733 10560 rpi-ble_0.1.0_all.deb
+ 2056fb1131c2c69ada2490201ab86714c1e54356 6012 rpi-ble_0.1.0_arm64.buildinfo
+Checksums-Sha256:
+ ca8f95c1255b5dce904c386160dc4e5b66235f23c0cff416b730059060a4d81c 601 rpi-ble_0.1.0.dsc
+ ddfb5c233f9d025b5a6736b083ef1028844bcf60d55a0a4be33aa815afecbe42 22596 rpi-ble_0.1.0.tar.xz
+ ad0797b1aef23e23452a6292a95b229af4286ebf9acb887f390b01d90be80958 10560 rpi-ble_0.1.0_all.deb
+ 013119b8e31ed8c038a8952e5eb7a757f4ce2fce74e943c199d0564cd93bf276 6012 rpi-ble_0.1.0_arm64.buildinfo
+Files:
+ 71d462c7324acd026fd8a14d9dbca038 601 utils optional rpi-ble_0.1.0.dsc
+ e3532eb4a342c161bb77053c518a78ac 22596 utils optional rpi-ble_0.1.0.tar.xz
+ 16201f0f5a2288a71ead2501c0dae72b 10560 utils optional rpi-ble_0.1.0_all.deb
+ 85b67770c8083ba548dbcfd20a704da7 6012 utils optional rpi-ble_0.1.0_arm64.buildinfo
